@@ -61,14 +61,25 @@ namespace WebSocketExperiment
                 if (context.Request.Path == "/ws")
                 {
                     if (context.WebSockets.IsWebSocketRequest)
-                    {
-                        Program.OpenedConnections++;
-                        if (Program.OpenedConnections > 2)
+                    {                        
+                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        var locker = new object();
+                        
+                        if (Program.OpenedConnections >= 3 && Program.Clients.Count < 3)
                         {
+                            Program.OpenedConnections = 0;
+                            Program.Clients.RemoveAll(x=>true);
+                        }
+                        else if (Program.OpenedConnections > 3)
+                        {                            
                             context.Response.StatusCode = 400;
                             return;
                         }
-                        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        lock (locker)
+                        {
+                            Program.Clients.Add(webSocket);
+                            Program.OpenedConnections++;
+                        }                        
                         await RequestHandler.Echo(context, webSocket);
                     }
                     else

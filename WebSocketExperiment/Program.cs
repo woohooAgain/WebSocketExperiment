@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -12,11 +13,10 @@ namespace WebSocketExperiment
 {
     public class Program
     {
-        public static int OpenedConnections { get; set; }
-        public static List<Guid> Clients { get; set; }
+        public static int OpenedConnections = 0;
+        public static List<WebSocket> Clients = new List<WebSocket>();
         public static void Main(string[] args)
         {
-            var OpenedConnections = 0;
             CreateWebHostBuilder(args).Build().Run();
         }
 

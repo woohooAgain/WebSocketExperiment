@@ -14,9 +14,22 @@ namespace WebSocketExperiment.Handler
         {
             var buffer = new byte[1024 * 4];
             WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
             while (!result.CloseStatus.HasValue)
             {
-                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
+                //foreach (var client in Program.Clients)
+                for (var i = 0; i < Program.Clients.Count; i++)
+                {
+                    var client = Program.Clients[i];
+                    if (client.State == WebSocketState.Open)
+                    {
+                        await client.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
+                    }
+                    else
+                    {
+                        Program.Clients.Remove(client);
+                    }
+                }
 
                 result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }

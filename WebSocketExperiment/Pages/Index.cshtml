@@ -163,7 +163,8 @@
         var scheme = document.location.protocol == "https:" ? "wss" : "ws";
         var port = document.location.port ? (":" + document.location.port) : "";
 
-        connectionUrl.value = scheme + "://" + document.location.hostname + port + "/ws";
+        connectionUrl.value = scheme + "://" + document.location.hostname + port + "/WebSocketExperiment" + "/ws";
+        var clientGuid;
 
         function updateState() {
             function disable() {
@@ -221,16 +222,21 @@
             if (!socket || socket.readyState != WebSocket.OPEN) {
                 alert("socket not connected");
             }
-            var data = sendMessage.value;
-            socket.send(data);
-            commsLog.innerHTML += '<tr>' +
-                '<td class="commslog-client">Client</td>' +
-                '<td class="commslog-server">Server</td>' +
-                '<td class="commslog-data">' + htmlEscape(data) + '</td></tr>';
+            var data = {
+                data: sendMessage.value,
+                Client: clientGuid
+            };
+            var json = JSON.stringify(data);
+            socket.send(json);
+            //commsLog.innerHTML += '<tr>' +
+            //    '<td class="commslog-client">Client</td>' +
+            //    '<td class="commslog-server">Server</td>' +
+            //    '<td class="commslog-data">' + htmlEscape(data) + '</td></tr>';
         }
 
         connectButton.onclick = function () {
             stateLabel.innerHTML = "Connecting";
+            clientGuid = guid();
             socket = new WebSocket(connectionUrl.value);
             socket.onopen = function (event) {
                 updateState();
@@ -260,6 +266,24 @@
                 .replace(/'/g, '&#39;')
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;');
+        }
+
+        function guid() {
+            function s4() {
+                return Math.floor((1 + Math.random()) * 0x10000)
+                    .toString(16)
+                    .substring(1);
+            }
+            return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+        }
+
+        function str2ab(str) {
+            var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+            var bufView = new Uint16Array(buf);
+            for (var i=0, strLen=str.length; i < strLen; i++) {
+                bufView[i] = str.charCodeAt(i);
+            }
+            return buf;
         }
     </script>
 </body>
