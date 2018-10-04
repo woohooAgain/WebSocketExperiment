@@ -105,10 +105,9 @@ namespace WebSocketExperiment.Game
             if (random)
             {
                 var rnd = new Random();
-                //Red = rnd.Next(256);
-                //Green = rnd.Next(256);
-                //Blue = rnd.Next(256);
-                Red = 255;
+                Red = rnd.Next(256);
+                Green = rnd.Next(256);
+                Blue = rnd.Next(256);
             }
         }
     }
