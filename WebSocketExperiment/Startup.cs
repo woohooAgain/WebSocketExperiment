@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WebSocketExperiment.Handler;
+using WebSocketExperiment.Helpers;
 
 namespace WebSocketExperiment
 {
@@ -79,8 +80,13 @@ namespace WebSocketExperiment
                         {
                             Program.Clients.Add(webSocket);
                             Program.OpenedConnections++;
-                        }                        
-                        await RequestHandler.Echo(context, webSocket);
+                            Helpers.Helpers.SetGuid(webSocket);
+                        }
+                        if (Program.OpenedConnections == 3)
+                        {
+                            Program.Game = new Game.Game();
+                        }
+                        await RequestHandler.Echo(context, webSocket);                        
                     }
                     else
                     {

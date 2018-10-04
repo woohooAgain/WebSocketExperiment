@@ -15,6 +15,8 @@ namespace WebSocketExperiment
     {
         public static int OpenedConnections = 0;
         public static List<WebSocket> Clients = new List<WebSocket>();
+        public static Game.Game Game { get; set; }
+        public static Dictionary<Guid, WebSocket> IdToSocketDictionary = new Dictionary<Guid, WebSocket>();
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();

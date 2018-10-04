@@ -223,7 +223,20 @@
                 alert("socket not connected");
             }
             var data = {
-                data: sendMessage.value,
+                Ball: {
+                    Color: {
+                        Red: 255,
+                        Gren: 0,
+                        Blue: 0
+                    },
+                    FromX: 0,
+                    FromY: 0,
+                    FromZ: 0,
+                    TangentX: 0,
+                    TangentY: 0,
+                    TangentZ: 0,
+                    StartTime: new Date(5000)
+                },
                 Client: clientGuid
             };
             var json = JSON.stringify(data);
@@ -236,7 +249,6 @@
 
         connectButton.onclick = function () {
             stateLabel.innerHTML = "Connecting";
-            clientGuid = guid();
             socket = new WebSocket(connectionUrl.value);
             socket.onopen = function (event) {
                 updateState();
@@ -252,6 +264,10 @@
             };
             socket.onerror = updateState;
             socket.onmessage = function (event) {
+                if (event.data.startsWith('Your id')) {
+                    var strings = event.data.split(':');
+                    clientGuid = strings[1];
+                }
                 commsLog.innerHTML += '<tr>' +
                     '<td class="commslog-server">Server</td>' +
                     '<td class="commslog-client">Client</td>' +
@@ -278,9 +294,9 @@
         }
 
         function str2ab(str) {
-            var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
+            var buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
             var bufView = new Uint16Array(buf);
-            for (var i=0, strLen=str.length; i < strLen; i++) {
+            for (var i = 0, strLen = str.length; i < strLen; i++) {
                 bufView[i] = str.charCodeAt(i);
             }
             return buf;

@@ -5,6 +5,9 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using WebSocketExperiment.Game;
+using WebSocketExperiment.Helpers;
 
 namespace WebSocketExperiment.Handler
 {
@@ -12,28 +15,40 @@ namespace WebSocketExperiment.Handler
     {
         public static async Task Echo(HttpContext context, WebSocket webSocket)
         {
-            var buffer = new byte[1024 * 4];
-            WebSocketReceiveResult result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-            while (!result.CloseStatus.HasValue)
+            while(webSocket.State == WebSocketState.Open)
             {
-                //foreach (var client in Program.Clients)
-                for (var i = 0; i < Program.Clients.Count; i++)
+                var buffer = new byte[1024 * 4];
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                var data = JsonConvert.DeserializeObject<DataFromClient>(System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+                foreach (var pair in Program.IdToSocketDictionary)
                 {
-                    var client = Program.Clients[i];
-                    if (client.State == WebSocketState.Open)
+                    Program.Game.CountCurrentColor(data.Ball.Color);                    
+                    var dataToSend = new Packet
                     {
-                        await client.SendAsync(new ArraySegment<byte>(buffer, 0, result.Count), result.MessageType, result.EndOfMessage, CancellationToken.None);
+                        Ball = data.Ball
+                    };
+                    var answer = System.Text.Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dataToSend));
+                    if (pair.Key.Equals(data.Client))
+                    {
+                        continue;
                     }
-                    else
+                    if (pair.Value.State == WebSocketState.Open)
                     {
-                        Program.Clients.Remove(client);
+                        await pair.Value.SendAsync(new ArraySegment<byte>(answer), result.MessageType, result.EndOfMessage, CancellationToken.None);
+                    }
+                    if (Program.Game.ColorsAreEqual())
+                    {
+                        Program.Game.StopGame();
                     }
                 }
-
-                result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             }
-            await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
         }
+    }
+
+    public class Packet
+    {
+        public Ball Ball { get; set; }
+        public Color CurrentColor { get; set; }
     }
 }
